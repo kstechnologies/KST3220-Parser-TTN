@@ -3,13 +3,14 @@
  * @brief    Parser for KST3220 for use on The Things Network (TTN)
  * @author   BK
  * @author   DS
- * @version  1.0.0
- * @date     2022-06-13
+ * @author   CW
+ * @version  1.1.0
+ * @date     2023-07-05
  */
 /* {{{ ------------------------------------------------------------------ */
 /** 
  * @licence
- * Copyright (c) 2019 - 2022, KS Technologies, LLC
+ * Copyright (c) 2019 - 2023, KS Technologies, LLC
  * 
  * All rights reserved.
  * 
@@ -50,31 +51,27 @@
 function decodeUplink(input) {
 
     /*
-    The following examples show how to parse the distance uplink.
-    KST uses concatenated Key-Length-Value decoding for all of its
-    LoRaWAN Uplinks. Following are the keys for the KST3220:
-    0x0078 > Battery
-    0x0082 > Distance
-    0xFFFF > Error State
-
-    Following every 2-byte Key is a 1-byte Length indicating how
-    many bytes follow.
-    
-    And, finally, the Value follows the Length and equal to the
-    number of bytes specified in the Length.
-
-    Here is an example of an uplink -
-    00 78 01 FF 00 82 02 08 F1 FF FF 01 00
+    Here is an example of an uplink with battery as a percentage-
+    00 78 01 FE 00 82 02 08 F1 FF FF 01 00
      0  1  2  3  4  5  6  7  8  9 10 11 12
 
     Decoded, that appears as ...
-    * Battery: 0xFF > 255 (maximum!)
+    * Battery: 0xFE > 254 (maximum!)
+    * Distance: 0x08F1 > 2289mm
+    * Error: 0x00 > No Error
+    
+    Here is an example of an uplink with battery as voltage-
+    00 78 02 0B FE 00 82 02 08 F1 FF FF 01 00
+     0  1  2  3  4  5  6  7  8  9 10 11 12 13
+
+    Decoded, that appears as ...
+    * Battery: 0x0BFE > 3.007V
     * Distance: 0x08F1 > 2289mm
     * Error: 0x00 > No Error
 
-    The TTN offers the ability to test your decoder. It is encouraged
-    that you paste the Byte-level examples above and ensure your decoder
-    is correct before deploying to your server.
+    TTN offers the ability to test your decoder. It is encouraged
+    that you paste the Byte-level examples above and ensure your
+    decoder is correct before deploying to your server.
     */
 
     // Get the incoming bytes
@@ -83,27 +80,52 @@ function decodeUplink(input) {
     // Initialize variables
     var batteryFloat = 0xFFFF;
     var error = 0;
-
-    // Battery (mV): Mask to make sure your final answer is just 2-bytes
-    batteryFloat = 100.0 * (bytes[3] / 254.0);
-    if (batteryFloat == 0xFF) {
-        error = 1;
-    }
-
+    
     // Initialize variables
     var distanceInt = 0xFFFF;
+    
+    if(bytes[2] == 2) // battery in voltage payload
+    {
+      // Battery (mV): Mask to make sure your final answer is just 2-bytes
+      batteryMSB = bytes[3];
+      batteryLSB = bytes[4];
+      batteryInt = (batteryMSB << 8) | batteryLSB;
+      batteryFloat = batteryInt/ 1000;
 
-    // Distance (mm) 
-    distanceMSB = bytes[7];
-    distanceLSB = bytes[8];
-    distanceInt = (distanceMSB << 8) | distanceLSB;
+      // Distance (mm) 
+      distanceMSB = bytes[8];
+      distanceLSB = bytes[9];
+      distanceInt = (distanceMSB << 8) | distanceLSB
+  
+      // JSON Packet gets set to the server
+      return {
+          data: {
+              battery: batteryFloat,
+              distance: distanceInt,
+              error: error
+          }
+      };    
+    }
+    else // battery in percentage payload
+    {
+      // Battery (%): Mask to make sure your final answer is just 2-bytes
+      batteryFloat = 100.0 * (bytes[3] / 254.0);
+      if (batteryFloat == 0xFF) {
+          error = 1;
+      } 
+      
+      // Distance (mm) 
+      distanceMSB = bytes[7];
+      distanceLSB = bytes[8];
+      distanceInt = (distanceMSB << 8) | distanceLSB
 
-    // JSON Packet gets set to the server
-    return {
-        data: {
-            battery: batteryFloat,
-            distance: distanceInt,
-            error: error
-        }
-    };
+      // JSON Packet gets set to the server
+      return {
+          data: {
+              battery: batteryFloat,
+              distance: distanceInt,
+              error: error
+          }
+      };
+  }  
 }
