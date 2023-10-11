@@ -15,7 +15,7 @@ Example Payload with Battery Voltage: `0078020BFE00820208F1FFFF0100`
 | Packet Type          | Key    | Length | Value  | Decoded Value |
 |----------------------|--------|--------|--------|---------------|
 | Battery (Percentage) | 0x0078 | 0x01   | 0xFF   | 100%          |
-| Battery (Voltage)    | 0x0078 | 0x02   | 0x0BFE | 3.007V        |
+| Battery (Voltage)    | 0x0078 | 0x02   | 0x0BFE | 3.07V        |
 | Distance             | 0x0082 | 0x02   | 0x08F1 | 2289mm        |
 | Error                | 0xFFFF | 0x01   | 0x00   | No Error      |
 
@@ -35,28 +35,28 @@ Example: `0100011E` = Set Uplink Interval to 30mins
 
 ## Battery Percentage Lookup Table
 
-| Voltage | Sensed Battery | Percent Remaining |
-|---------|----------------|-------------------|
-| 2.75V   | 202            | 5%                |
-| 2.80V   | 212            | 20%               |
-| 2.85V   | 222            | 70%               |
-| 2.90V   | 232            | 85%               |
-| 2.95V   | 244            | 90%               |
-| 3.00V   | 254            | 100%              |
-| 3.05V   | 255            | 100%              |
+| Voltage | Sensed Battery Ranges | Percent Remaining |
+|---------|-----------------------|-------------------|
+| 2.70V   | 0-200                 | 0%                |
+| 2.75V   | 201 - 211             | 5%                |
+| 2.80V   | 212 - 221             | 20%               |
+| 2.85V   | 222 - 231             | 70%               |
+| 2.90V   | 232 - 241             | 85%               |
+| 2.95V   | 242 - 253             | 90%               |
+| 3.05V   | 254 - 255             | 100%              |
 
 
 ## Battery Voltage Lookup Table
 
-| Voltage | Percent Remaining |
-|---------|-------------------|
-| 2.70V   | 0%                |
-| 2.75V   | 5%                |
-| 2.80V   | 20%               |
-| 2.85V   | 70%               |
-| 2.90V   | 85%               |
-| 2.95V   | 90%               |
-| 3.0V+   | 100%              |
+| Voltage         | Percent Remaining |
+|-----------------|-------------------|
+| Less than 2.70V | 0%                |
+| 2.71V to 2.75V  | 5%                |
+| 2.76V to 2.80V  | 20%               |
+| 2.81V to 2.85V  | 70%               |
+| 2.86V to 2.90V  | 85%               |
+| 2.91V to 2.95V  | 90%               |
+| 2.96V to 3.0V+  | 100%              |
 
 
 ## Error States
